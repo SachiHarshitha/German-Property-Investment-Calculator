@@ -483,6 +483,12 @@ app.layout = html.Div(
     State("land_value_per_sqm", "value"),
     State("rental_increase_rate", "value"),
     State("savings_interest_rate", "value"),
+    State("furnishing_option", "value"),
+    State("furniture_table", "data"),
+    State("depreciation_method", "value"),
+    Input("lifespan_kitchen", "value"),
+    Input("lifespan_appliances", "value"),
+    Input("lifespan_furniture", "value"),
 )
 def run_simulation(
     n_clicks,
@@ -509,39 +515,76 @@ def run_simulation(
     land_value_per_sqm,
     rental_increase_rate,
     savings_interest_rate,
-):
-
+    funishing_option,
+    furniture_table,
+    depreciation_method,
+    lifespan_kitchen,
+    lifespan_appliances,
+    lifespan_furniture,
+):    
     if n_clicks == 0:
         return go.Figure()
 
     saved_args = {**locals()}
     persist_dict(saved_args)  # Updated to make a copy per loco.loop
 
-    # run property_investment_calculator(...)
-    result = property_investment_calculator(
-        purchase_price=purchase_price,
-        mortgage_rate=mortgage_rate / 100,
-        loan_percentage=loan_percentage / 100,
-        rental_income_monthly=rental_income_monthly,
-        hausgeld_monthly=hausgeld_monthly,
-        grundsteuer_yearly=grundsteuer_yearly,
-        maintenance_reserve_per_sqm_yearly=maintenance_reserve_per_sqm_yearly,
-        apartment_size_sqm=apartment_size_sqm,
-        salary_income=salary_income,
-        monthly_expenses=monthly_expenses,
-        salary_increase_rate=salary_increase_rate / 100,
-        property_transfer_tax_rate=property_transfer_tax_rate / 100,
-        provision_rate=provision_rate / 100,
-        notary_fee_rate=notary_fee_rate / 100,
-        grundbuch_fee_rate=grundbuch_fee_rate / 100,
-        rental_increase_rate=rental_increase_rate / 100,
-        vacancy_rate=vacancy_rate / 100,
-        depreciation_rate=depreciation_rate / 100,
-        savings_interest_rate=savings_interest_rate / 100,
-        years=years,
-        renovation_costs=renovation_costs,
-        land_value_per_sqm=land_value_per_sqm,
-    )
+    if funishing_option == "furnished":
+        # build the furniture data structure
+        furniture_items = build_funiture_items(furniture_table,lifespan_kitchen=lifespan_kitchen, lifespan_appliances=lifespan_appliances, lifespan_furniture=lifespan_furniture)
+        
+        # run property_investment_calculator(...)
+        result = property_investment_calculator(
+            purchase_price=purchase_price,
+            mortgage_rate=mortgage_rate / 100,
+            loan_percentage=loan_percentage / 100,
+            rental_income_monthly=rental_income_monthly,
+            hausgeld_monthly=hausgeld_monthly,
+            grundsteuer_yearly=grundsteuer_yearly,
+            maintenance_reserve_per_sqm_yearly=maintenance_reserve_per_sqm_yearly,
+            apartment_size_sqm=apartment_size_sqm,
+            salary_income=salary_income,
+            monthly_expenses=monthly_expenses,
+            salary_increase_rate=salary_increase_rate / 100,
+            property_transfer_tax_rate=property_transfer_tax_rate / 100,
+            provision_rate=provision_rate / 100,
+            notary_fee_rate=notary_fee_rate / 100,
+            grundbuch_fee_rate=grundbuch_fee_rate / 100,
+            rental_increase_rate=rental_increase_rate / 100,
+            vacancy_rate=vacancy_rate / 100,
+            depreciation_rate=depreciation_rate / 100,
+            savings_interest_rate=savings_interest_rate / 100,
+            years=years,
+            renovation_costs=renovation_costs,
+            land_value_per_sqm=land_value_per_sqm,
+            furniture_items=furniture_items,
+            furniture_depreciation_method=depreciation_method,
+        )
+    else:
+         # run property_investment_calculator(...)
+        result = property_investment_calculator(
+            purchase_price=purchase_price,
+            mortgage_rate=mortgage_rate / 100,
+            loan_percentage=loan_percentage / 100,
+            rental_income_monthly=rental_income_monthly,
+            hausgeld_monthly=hausgeld_monthly,
+            grundsteuer_yearly=grundsteuer_yearly,
+            maintenance_reserve_per_sqm_yearly=maintenance_reserve_per_sqm_yearly,
+            apartment_size_sqm=apartment_size_sqm,
+            salary_income=salary_income,
+            monthly_expenses=monthly_expenses,
+            salary_increase_rate=salary_increase_rate / 100,
+            property_transfer_tax_rate=property_transfer_tax_rate / 100,
+            provision_rate=provision_rate / 100,
+            notary_fee_rate=notary_fee_rate / 100,
+            grundbuch_fee_rate=grundbuch_fee_rate / 100,
+            rental_increase_rate=rental_increase_rate / 100,
+            vacancy_rate=vacancy_rate / 100,
+            depreciation_rate=depreciation_rate / 100,
+            savings_interest_rate=savings_interest_rate / 100,
+            years=years,
+            renovation_costs=renovation_costs,
+            land_value_per_sqm=land_value_per_sqm,
+        )
 
     # Grab values for summary
     summary_list = html.Ul(
@@ -628,8 +671,17 @@ def calculate_furniture(
         persist_dict(saved_args)  # Updated to make a copy per loco.loop
 
         # build the furniture data structure
-        items: dict[str, tuple[int | float, int]] = {}
-        for item in furniture_table:
+        items = build_funiture_items(furniture_table,lifespan_kitchen=lifespan_kitchen, lifespan_appliances=lifespan_appliances, lifespan_furniture=lifespan_furniture)
+        # calculate depreciation
+        depreciation_value = calculate_furniture_depreciation(
+            method=depreciation_method, items=items
+        )
+        return f"{depreciation_value} €", f"{sum([v[0] for v in items.values()])} €"
+    return "Click Calculate", "Click Calculate"
+
+def build_funiture_items(furniture_table, lifespan_kitchen, lifespan_appliances, lifespan_furniture):
+    items: dict[str, tuple[int | float, int]] = {}
+    for item in furniture_table:
             if item["name"] and item["value"]:
                 items[item["name"]] = (
                     float(item["value"]),
@@ -639,13 +691,7 @@ def calculate_furniture(
                         "furniture": lifespan_furniture,
                     }[item["category"]],
                 )
-        # calculate depreciation
-        depreciation_value = calculate_furniture_depreciation(
-            method=depreciation_method, items=items
-        )
-        return f"{depreciation_value} €", f"{sum([v[0] for v in items.values()])} €"
-    return "Click Calculate", "Click Calculate"
-
+    return items
 
 if __name__ == "__main__":
     app.server.run(debug=True)

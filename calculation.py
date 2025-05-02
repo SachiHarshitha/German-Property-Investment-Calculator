@@ -1,5 +1,6 @@
 import math
 import random
+from typing import Optional, Union
 
 from lst2024 import Lohnsteuer2024
 from lst2025 import Lohnsteuer2025
@@ -53,6 +54,8 @@ def property_investment_calculator(
     land_value_per_sqm=0,
     rental_increase_rate=0.02,
     savings_interest_rate=0.02,
+    furniture_items: Optional[Union[dict[str, float], dict[str, tuple]]] = None,
+    furniture_depreciation_method: Optional[str] = "berlin",
 ) -> go.Figure:
 
     saved_args = {**locals()}  # Updated to make a copy per loco.loop
@@ -70,20 +73,22 @@ def property_investment_calculator(
         loan_amount=loan_amount, annual_interest_rate=mortgage_rate
     )
     monthly_loan_payment = loan_period[0]  # Get the monthly payment from the tuple
+    total_furniture_costs = 0.0
+    if furniture_items:
+        total_furniture_costs = sum([v[0] for v in furniture_items.values()])
 
     total_purchase_costs = (
-        property_transfer_tax
-        + provision
-        + notary_fee
-        + grundbuch_fee
-        + renovation_costs
+        property_transfer_tax + provision + notary_fee + grundbuch_fee
     )
-    total_initial_investment = purchase_price + total_purchase_costs
+
+    total_initial_investment = (
+        purchase_price + total_purchase_costs + total_furniture_costs + renovation_costs
+    )
 
     maintenance_reserve_yearly = maintenance_reserve_per_sqm_yearly * apartment_size_sqm
 
     land_value = land_value_per_sqm * apartment_size_sqm
-    building_value = total_initial_investment - land_value
+    building_value = purchase_price + renovation_costs - land_value
     depreciation_per_year = building_value * depreciation_rate
 
     yearly_hausgeld = hausgeld_monthly * 12
@@ -138,11 +143,20 @@ def property_investment_calculator(
             * (1 + random_inflation_rate)
         )
 
+        if furniture_items:
+            # Add furniture depreciation to building depreciation
+            furniture_depr = calculate_furniture_depreciation(
+                method=furniture_depreciation_method, items=furniture_items, year=year
+            )
+        else:
+            furniture_depr = 0.0
+        total_depreciation = depreciation_per_year + furniture_depr
+
         # Calculate taxable income
         taxable_rental_income = (
             annual_rental_income
             - interest_paid
-            - depreciation_per_year
+            - total_depreciation
             - yearly_hausgeld
             - grundsteuer_yearly
             - maintenance_reserve_yearly
@@ -196,7 +210,7 @@ def property_investment_calculator(
         # Property value appreciation and depreciation
         property_value *= 1 + random.uniform(-0.01, 0.07)  # Varying appreciation
         property_values.append(property_value)
-        depreciation_over_year.append(depreciation_per_year)
+        depreciation_over_year.append(total_depreciation)
 
         # Calculate net wealth with property
         net_wealth_with = (
@@ -316,7 +330,7 @@ def property_investment_calculator(
         "Monthly Loan Payment (Annuität)": monthly_loan_payment,
         "Total Purchase Costs": total_purchase_costs,
         "Total Initial Investment": total_initial_investment,
-        "Annual Depreciation": depreciation_per_year,
+        "Annual Depreciation": total_depreciation,
         "Total Expenses with Property": total_expenses_over_years_with[-1],
         "Total Expenses Without Property": total_expenses_over_years_without[-1],
         "Loan Balance": loan_balances[-1] if loan_balances else 0,
@@ -414,6 +428,43 @@ def calculate_furniture_depreciation(
         raise ValueError("Unknown depreciation method: choose 'berlin' or 'hamburg'")
 
     return total
+
+
+def simulate_furnished_rental(
+    base_rent: float,
+    rent_uplift: float,
+    vacancy_rate: float,
+    tax_rate: float,
+    furniture_items: dict,
+    depreciation_method: str = "berlin",
+    years: int = 10,
+) -> float:
+    """
+    Simulates total net income for furnished rentals with depreciation.
+
+    Args:
+        base_rent: Monthly base rent (unfurnished)
+        rent_uplift: % increase due to furnishing (e.g., 0.25 = 25%)
+        vacancy_rate: Expected vacancy rate
+        tax_rate: Effective tax rate
+        furniture_items: Dict of furniture {name: value} or {name: (value, lifespan)}
+        depreciation_method: 'berlin' or 'hamburg'
+        years: Simulation duration
+
+    Returns:
+        Total net income after tax (over years)
+    """
+    gross_rent_yearly = base_rent * (1 + rent_uplift) * 12 * (1 - vacancy_rate)
+    net_income = 0.0
+    for year in range(1, years + 1):
+        income = gross_rent_yearly
+        depreciation = calculate_furniture_depreciation(
+            method=depreciation_method, items=furniture_items, year=year
+        )
+        taxable = income - depreciation
+        tax = max(taxable, 0) * tax_rate
+        net_income += income - tax
+    return net_income
 
 
 example_result = property_investment_calculator(
