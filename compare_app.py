@@ -113,11 +113,36 @@ def shared_inputs():
     return dbc.Card(
         [
             html.H5("📊 Shared Inputs", className="card-title"),
-            create_input("Salary Income (€/year)", "salary", 6400 * 12),
-            create_input("Monthly Expenses (€)", "expenses", 2000),
-            create_input("Years", "years", 30),
-            create_input("Mortgage Rate (%)", "rate", 4, 0.1),
-            create_input("Loan Percentage (%)", "loan_pct", 100, 1),
+            html.Div(
+                [
+                    html.Div(
+                        [
+                            create_input("Salary Income (€/year)", "salary", 5000 * 12),
+                            create_input("Monthly Expenses (€)", "expenses", 2000),
+                        ],
+                        style={"display": "inline-block", "width": "48%"},
+                    ),
+                    html.Div(
+                        [
+                            create_input("Mortgage Rate (%)", "rate", 4, 0.1),
+                            create_input("Loan Percentage (%)", "loan_pct", 100, 1),
+                        ],
+                        style={
+                            "display": "inline-block",
+                            "marginLeft": "10px",
+                            "width": "48%",
+                        },
+                    ),
+                    html.Div(
+                        [
+                            create_input("Simulation Years", "years", 30),
+                        ],
+                        style={
+                            "width": "48%",
+                        },
+                    ),
+                ]
+            ),
         ],
         body=True,
     )
@@ -273,11 +298,6 @@ def compare_props(
     result_b = property_investment_calculator(**params_b)
 
     def summary_card(label, result):
-        welath_delta: float = (
-            result["Net Wealth With Property"] - result["Net Wealth Without Property"]
-        )
-        total_investment: float = result["Total Initial Investment"]
-        roi = welath_delta / total_investment * 100 if total_investment != 0 else 0
 
         return dbc.Card(
             [
@@ -303,6 +323,7 @@ def compare_props(
                             f"📐 Wealth Delta (With - Without): {result['Net Wealth With Property'] - result['Net Wealth Without Property'] } €"
                         ),
                         html.Li(f"🌟 ROI: {result['ROI']}"),
+                        html.Li(f"🌟 IRR: {result['IRR']}%"),
                     ]
                 ),
             ],

@@ -2,6 +2,8 @@ import math
 import random
 from typing import Optional, Union
 
+import numpy_financial as np
+
 from lst2024 import Lohnsteuer2024
 from lst2025 import Lohnsteuer2025
 import plotly.graph_objects as go
@@ -117,8 +119,23 @@ def property_investment_calculator(
     total_interest_paid = 0
 
     net_wealth_over_years_without = []
+    initial_investment = (
+        purchase_price * (1 - loan_percentage)
+        + purchase_price
+        * (
+            property_transfer_tax_rate
+            + provision_rate
+            + notary_fee_rate
+            + grundbuch_fee_rate
+        )
+        + renovation_costs
+        + total_furniture_costs  # if furniture_items provided
+    )
+
+    cash_flows = [-initial_investment]  # Year 0 outflow
 
     for year in range(1, years + 1):
+
         # Calculate loan balance and annual rental income
         interest_paid = balance * mortgage_rate
         principal_paid = yearly_loan_payment - interest_paid
@@ -133,12 +150,21 @@ def property_investment_calculator(
         )
         random_inflation_rate = max(-0.02, min(inflation, 0.03))
 
+        # Calculate INFLATION for expenses
+        inflated_hausgeld = yearly_hausgeld * (1 + random_inflation_rate) ** (year - 1)
+        inflated_grundsteuer = grundsteuer_yearly * (1 + random_inflation_rate) ** (
+            year - 1
+        )
+        inflated_maintenance_reserve = maintenance_reserve_yearly * (
+            1 + random_inflation_rate
+        ) ** (year - 1)
+
         # Calculate operating cashflow
         operating_cashflow = (
             annual_rental_income
-            - yearly_hausgeld
-            - grundsteuer_yearly
-            - maintenance_reserve_yearly
+            - inflated_hausgeld
+            - inflated_grundsteuer
+            - inflated_maintenance_reserve
         )
 
         operating_cashflows.append(operating_cashflow)
@@ -169,7 +195,7 @@ def property_investment_calculator(
             - maintenance_reserve_yearly
         )
         taxable_incomes_with.append(taxable_rental_income)
-
+        
         steur_salary = estimate_tax(salary_now * 100)
         netto_salary = float(steur_salary.getWvfrb()) / 100
         tax_salary = float((steur_salary.getLstlzz()) / 100)
@@ -182,6 +208,14 @@ def property_investment_calculator(
         after_tax_salary_with = (
             taxable_rental_income - tax_rental_income
         ) + netto_salary
+        
+         # Now that both values exist, calculate net_cash
+        net_cash = (
+            operating_cashflows[year - 1]
+            - yearly_loan_payment
+            + (tax_over_years_with[year - 1] if tax_over_years_with else 0)
+        )
+        cash_flows.append(net_cash)
 
         # Calculate Tax without property
         after_tax_salary_without = salary_now - netto_salary
@@ -205,9 +239,7 @@ def property_investment_calculator(
         )
 
         # Add expenses to the list
-        cumulative_expenses_with += total_expense_for_year_with * (
-            1 + random_inflation_rate
-        )
+        cumulative_expenses_with += total_expense_for_year_with
         total_expenses_over_years_without.append(living_expenses_yearly)
         total_expenses_over_years_with.append(cumulative_expenses_with)
 
@@ -263,6 +295,13 @@ def property_investment_calculator(
     )
 
     roi = net_profit / initial_investment if initial_investment else 0
+
+    # IRR Calculation
+    # Add resale value in final year
+    final_resale_gain = property_values[-1] - loan_balances[-1]
+    cash_flows[-1] += final_resale_gain
+    irr = np.irr(cash_flows)
+    irr_percent = irr * 100 if irr is not None else None
 
     years_list = list(range(1, years + 1))
 
@@ -388,6 +427,7 @@ def property_investment_calculator(
         ),
         "Loan Balance After Final Year": loan_balances[-1] if loan_balances else 0,
         "ROI": roi,
+        "IRR": irr_percent,
     }
 
 

@@ -587,6 +587,8 @@ def run_simulation(
             html.Li(
                 f"📐 Wealth Delta (With - Without): {result['Net Wealth With Property'] - result['Net Wealth Without Property'] } €"
             ),
+            html.Li(f"🌟 ROI: {result['ROI']}"),
+            html.Li(f"🌟 IRR: {result['IRR']}%"),
         ]
     )
 
