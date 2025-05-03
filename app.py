@@ -3,7 +3,7 @@ from dash import Dash, dcc, html, Input, Output, State, dash_table
 import plotly.graph_objects as go
 
 from calculation import calculate_furniture_depreciation, property_investment_calculator
-
+from controls import create_input, create_slider
 
 import dash_bootstrap_components as dbc
 
@@ -22,51 +22,6 @@ app = Dash(
     external_scripts=external_scripts,
     external_stylesheets=external_stylesheets,
 )
-
-
-def create_input(label, id, value, step=None):
-    return html.Div(
-        [
-            html.Label(label),
-            dcc.Input(
-                id=id,
-                type="number",
-                value=get_value(id, value),
-                step=step,
-                style={"width": "100%"},
-                persistence=id,
-                persistence_type="local",
-            ),
-            html.Br(),
-            html.Br(),
-        ]
-    )
-
-
-def create_slider(label, id, min_val, max_val, step, value):
-    return html.Div(
-        [
-            html.Label(label),
-            dcc.Slider(
-                id=id,
-                min=min_val,
-                max=max_val,
-                step=step,
-                value=get_value(id, value),
-                marks={
-                    i: f"{i}%"
-                    for i in range(
-                        int(min_val), int(max_val) + 1, int((max_val - min_val) / 5)
-                    )
-                },
-                tooltip={"placement": "top", "always_visible": True},
-                persistence=id,
-                persistence_type="local",
-            ),
-            html.Br(),
-            html.Br(),
-        ]
-    )
 
 
 app.layout = html.Div(
@@ -521,7 +476,7 @@ def run_simulation(
     lifespan_kitchen,
     lifespan_appliances,
     lifespan_furniture,
-):    
+):
     if n_clicks == 0:
         return go.Figure()
 
@@ -530,8 +485,13 @@ def run_simulation(
 
     if funishing_option == "furnished":
         # build the furniture data structure
-        furniture_items = build_funiture_items(furniture_table,lifespan_kitchen=lifespan_kitchen, lifespan_appliances=lifespan_appliances, lifespan_furniture=lifespan_furniture)
-        
+        furniture_items = build_funiture_items(
+            furniture_table,
+            lifespan_kitchen=lifespan_kitchen,
+            lifespan_appliances=lifespan_appliances,
+            lifespan_furniture=lifespan_furniture,
+        )
+
         # run property_investment_calculator(...)
         result = property_investment_calculator(
             purchase_price=purchase_price,
@@ -560,7 +520,7 @@ def run_simulation(
             furniture_depreciation_method=depreciation_method,
         )
     else:
-         # run property_investment_calculator(...)
+        # run property_investment_calculator(...)
         result = property_investment_calculator(
             purchase_price=purchase_price,
             mortgage_rate=mortgage_rate / 100,
@@ -671,7 +631,12 @@ def calculate_furniture(
         persist_dict(saved_args)  # Updated to make a copy per loco.loop
 
         # build the furniture data structure
-        items = build_funiture_items(furniture_table,lifespan_kitchen=lifespan_kitchen, lifespan_appliances=lifespan_appliances, lifespan_furniture=lifespan_furniture)
+        items = build_funiture_items(
+            furniture_table,
+            lifespan_kitchen=lifespan_kitchen,
+            lifespan_appliances=lifespan_appliances,
+            lifespan_furniture=lifespan_furniture,
+        )
         # calculate depreciation
         depreciation_value = calculate_furniture_depreciation(
             method=depreciation_method, items=items
@@ -679,19 +644,23 @@ def calculate_furniture(
         return f"{depreciation_value} €", f"{sum([v[0] for v in items.values()])} €"
     return "Click Calculate", "Click Calculate"
 
-def build_funiture_items(furniture_table, lifespan_kitchen, lifespan_appliances, lifespan_furniture):
+
+def build_funiture_items(
+    furniture_table, lifespan_kitchen, lifespan_appliances, lifespan_furniture
+):
     items: dict[str, tuple[int | float, int]] = {}
     for item in furniture_table:
-            if item["name"] and item["value"]:
-                items[item["name"]] = (
-                    float(item["value"]),
-                    {
-                        "kitchen": lifespan_kitchen,
-                        "appliances": lifespan_appliances,
-                        "furniture": lifespan_furniture,
-                    }[item["category"]],
-                )
+        if item["name"] and item["value"]:
+            items[item["name"]] = (
+                float(item["value"]),
+                {
+                    "kitchen": lifespan_kitchen,
+                    "appliances": lifespan_appliances,
+                    "furniture": lifespan_furniture,
+                }[item["category"]],
+            )
     return items
+
 
 if __name__ == "__main__":
     app.server.run(debug=True)

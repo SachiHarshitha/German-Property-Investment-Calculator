@@ -56,6 +56,8 @@ def property_investment_calculator(
     savings_interest_rate=0.02,
     furniture_items: Optional[Union[dict[str, float], dict[str, tuple]]] = None,
     furniture_depreciation_method: Optional[str] = "berlin",
+    inflation_rates=None,
+    appreciation_rates=None,
 ) -> go.Figure:
 
     saved_args = {**locals()}  # Updated to make a copy per loco.loop
@@ -112,6 +114,7 @@ def property_investment_calculator(
     cumulative_expenses_without = 0
     net_wealth_without = 0
     net_wealth_over_years_with = []
+    total_interest_paid = 0
 
     net_wealth_over_years_without = []
 
@@ -121,10 +124,14 @@ def property_investment_calculator(
         principal_paid = yearly_loan_payment - interest_paid
         balance -= principal_paid
         balance = max(balance, 0)
+        total_interest_paid += interest_paid
         loan_balances.append(balance)
         rental_incomes.append(annual_rental_income)
-        # Generate a random inflation rate between -2% and +3% each year
-        random_inflation_rate = max(-0.02, min(random.gauss(0.02, 0.01), 0.03))
+        # Generate a random inflation rate if value is not provided
+        inflation = (
+            inflation_rates[year - 1] if inflation_rates else random.gauss(0.02, 0.01)
+        )
+        random_inflation_rate = max(-0.02, min(inflation, 0.03))
 
         # Calculate operating cashflow
         operating_cashflow = (
@@ -196,19 +203,21 @@ def property_investment_calculator(
         total_expense_for_year_with = (
             investment_expenses_yearly + living_expenses_yearly
         )
-        cumulative_expenses_with += total_expense_for_year_with
 
         # Add expenses to the list
         cumulative_expenses_with += total_expense_for_year_with * (
             1 + random_inflation_rate
         )
         total_expenses_over_years_without.append(living_expenses_yearly)
-        total_expenses_over_years_with.append(
-            cumulative_expenses_with + living_expenses_yearly
-        )
+        total_expenses_over_years_with.append(cumulative_expenses_with)
 
         # Property value appreciation and depreciation
-        property_value *= 1 + random.uniform(-0.01, 0.07)  # Varying appreciation
+        appreciation = (
+            appreciation_rates[year - 1]
+            if appreciation_rates
+            else random.uniform(-0.01, 0.07)
+        )
+        property_value *= 1 + appreciation
         property_values.append(property_value)
         depreciation_over_year.append(total_depreciation)
 
@@ -227,6 +236,33 @@ def property_investment_calculator(
 
         # Increment passive return for next year savings
         net_wealth_without *= (1 + savings_interest_rate) / (1 + random_inflation_rate)
+
+    # --- Net ROI Calculation ---
+    total_rental_income = sum(rental_incomes)
+    total_expenses = (
+        total_interest_paid
+        + hausgeld_monthly * 12 * years
+        + grundsteuer_yearly * years
+        + maintenance_reserve_per_sqm_yearly * apartment_size_sqm * years
+        + renovation_costs
+    )
+
+    net_profit = (
+        property_value - loan_balances[-1] + total_rental_income - total_expenses
+    )
+    initial_investment = (
+        purchase_price * (1 - loan_percentage)
+        + purchase_price
+        * (
+            property_transfer_tax_rate
+            + provision_rate
+            + notary_fee_rate
+            + grundbuch_fee_rate
+        )
+        + renovation_costs
+    )
+
+    roi = net_profit / initial_investment if initial_investment else 0
 
     years_list = list(range(1, years + 1))
 
@@ -351,6 +387,7 @@ def property_investment_calculator(
             tax_over_years_without[-1] if tax_over_years_without else 0
         ),
         "Loan Balance After Final Year": loan_balances[-1] if loan_balances else 0,
+        "ROI": roi,
     }
 
 
@@ -465,6 +502,44 @@ def simulate_furnished_rental(
         tax = max(taxable, 0) * tax_rate
         net_income += income - tax
     return net_income
+
+
+def compare_properties(property_a_params: dict, property_b_params: dict) -> dict:
+    """
+    Compares two property investment scenarios.
+
+    Args:
+        property_a_params: Dictionary of kwargs for first property
+        property_b_params: Dictionary of kwargs for second property
+
+    Returns:
+        Dictionary of comparative results
+    """
+    result_a = property_investment_calculator(**property_a_params)
+    result_b = property_investment_calculator(**property_b_params)
+
+    comparison = {
+        "Net Wealth A": result_a["Net Wealth With Property"],
+        "Net Wealth B": result_b["Net Wealth With Property"],
+        "Wealth Delta (B - A)": result_b["Net Wealth With Property"]
+        - result_a["Net Wealth With Property"],
+        "Final Property Value A": result_a["Property Value"],
+        "Final Property Value B": result_b["Property Value"],
+        "Final Loan Balance A": result_a["Loan Balance After Final Year"],
+        "Final Loan Balance B": result_b["Loan Balance After Final Year"],
+        "Total Expenses A": result_a["Total Expenses with Property"],
+        "Total Expenses B": result_b["Total Expenses with Property"],
+        "Tax Paid A": result_a["Tax Paid With Property (Last Year)"],
+        "Tax Paid B": result_b["Tax Paid With Property (Last Year)"],
+        "Better Investment": (
+            "B"
+            if result_b["Net Wealth With Property"]
+            > result_a["Net Wealth With Property"]
+            else "A"
+        ),
+    }
+
+    return comparison
 
 
 example_result = property_investment_calculator(
