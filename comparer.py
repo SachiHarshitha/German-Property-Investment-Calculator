@@ -1,12 +1,17 @@
 import random
+
 import dash
-from dash import html, dcc, Input, Output, State, MATCH, ALL
 import dash_bootstrap_components as dbc
+from dash import html, dcc, Input, Output, State, ALL
+from werkzeug.debug import Console
+from collections import defaultdict
+
 from calculation import property_investment_calculator
 from controls import create_input, create_slider
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.title = "Dynamic Property Comparison"
+
 
 def property_inputs(prefix):
     return dbc.Card(
@@ -28,8 +33,13 @@ def property_inputs(prefix):
             ]),
         ],
         body=True,
-        style={"marginBottom": "20px"}
+        style={
+            "flex": "1 1 300px",  # Each card takes equal width (min 300px)
+            "minWidth": "300px",  # Cards won't shrink below this width
+            "margin": "5px"  # Optional margin
+        }
     )
+
 
 def shared_inputs():
     return dbc.Card([
@@ -43,6 +53,34 @@ def shared_inputs():
         ])
     ], body=True)
 
+
+def summary_card(label, result):
+    return dbc.Card(
+        [
+            html.H5(label, className="card-title"),
+            dcc.Graph(figure=result["figure"]),
+            html.Ul([
+                html.Li(f"Net Wealth: €{result['Net Wealth With Property']:.2f}"),
+                html.Li(f"Property Value: €{result['Property Value']:.2f}"),
+                html.Li(f"Loan Balance: €{result['Loan Balance']:.2f}"),
+                html.Li(f"Monthly Loan Payment: €{result['Monthly Loan Payment (Annuität)']:.2f}"),
+                html.Li(f"Cashflow (Last Year): €{result['Operating Cashflow (Last Year)']:.2f}"),
+                html.Li(f"Tax Paid (Last Year): €{result['Tax Paid With Property (Last Year)']:.2f}"),
+                html.Li(
+                    f"📐 Wealth Delta: €{result['Net Wealth With Property'] - result['Net Wealth Without Property']:.2f}"),
+                html.Li(f"ROI: {result['ROI']}"),
+                html.Li(f"IRR: {result['IRR']}%"),
+            ]),
+        ],
+        body=True,
+        style={
+            "flex": "1 1 300px",
+            "minWidth": "300px",
+            "margin": "5px"
+        }
+    )
+
+
 app.layout = dbc.Container([
     html.H2("📈 Property Investment Comparison"),
     dcc.Store(id="property-store", data=["a", "b"]),
@@ -55,6 +93,7 @@ app.layout = dbc.Container([
     dbc.Button("Compare Properties", id="compare_btn", color="primary"),
     html.Br(), html.Div(id="results-container")
 ], fluid=True)
+
 
 @app.callback(
     Output("property-store", "data"),
@@ -75,12 +114,19 @@ def modify_property_list(add_clicks, remove_clicks, current):
         return current[:-1]
     return current
 
+
 @app.callback(
     Output("property-inputs-container", "children"),
     Input("property-store", "data")
 )
 def render_properties(properties):
-    return [property_inputs(pid) for pid in properties]
+    cards = [property_inputs(pid) for pid in properties]
+    return html.Div(cards, style={
+        "display": "flex",
+        "flexWrap": "wrap",
+        "gap": "10px",  # Optional spacing between cards
+    })
+
 
 @app.callback(
     Output("results-container", "children"),
@@ -98,13 +144,25 @@ def compare_dynamic_properties(n, prop_ids, input_values, slider_values, salary,
     if not n:
         return ""
 
-    # Extract values into structured dictionary
+    # Dash States for input and slider values
+    states_inputs = dash.callback_context.states_list[1]  # instead of inputs_list
+    states_sliders = dash.callback_context.states_list[2]
+
+    # Make sure these are always present
+    if not states_inputs:
+        states_inputs = []
+    if not states_sliders:
+        states_sliders = []
+
+    # Now you can safely iterate over them
     from collections import defaultdict
+
+
     inputs = defaultdict(dict)
-    for i, id_dict in enumerate(dash.callback_context.inputs_list[1]):
-        inputs[id_dict["property"]][id_dict["field"]] = input_values[i]
-    for i, id_dict in enumerate(dash.callback_context.inputs_list[2]):
-        inputs[id_dict["property"]][id_dict["field"]] = slider_values[i]
+    for i, id_dict in enumerate(states_inputs):
+        inputs[id_dict['id']["property"]][id_dict['id']["field"]] = input_values[i]
+    for i, id_dict in enumerate(states_sliders):
+        inputs[id_dict['id']["property"]][id_dict['id']["field"]] = slider_values[i]
 
     inflation_rates = [random.gauss(0.02, 0.01) for _ in range(years)]
     appreciation_rates = [random.uniform(-0.01, 0.07) for _ in range(years)]
@@ -120,6 +178,17 @@ def compare_dynamic_properties(n, prop_ids, input_values, slider_values, salary,
 
     cards = []
     for pid in prop_ids:
+        print(f"pid: {pid}")
+        transfer_tax_rate = inputs[f"transfer_tax_{pid}"]
+        print(f"transfer_tax_rate: {transfer_tax_rate}")
+        provision_rate = inputs[f"provision_{pid}"]
+        print(f"provision_rate: {provision_rate}")
+        notary_fee_rate = inputs[f"notary_{pid}"]
+        print(f"notary_fee_rate: {notary_fee_rate}")
+        grundbuch_fee_rate = inputs[f"grundbuch_{pid}"]
+        print(f"grundbuch_fee_rate: {grundbuch_fee_rate}")
+        hausgeld = inputs[f"hausgeld_{pid}"]
+        print(f"hausgeld: {hausgeld}")
         params = {
             "purchase_price": inputs[pid]["price"],
             "rental_income_monthly": inputs[pid]["rent"],
@@ -146,14 +215,30 @@ def compare_dynamic_properties(n, prop_ids, input_values, slider_values, salary,
                 html.Li(f"Monthly Loan Payment: €{result['Monthly Loan Payment (Annuität)']:.2f}"),
                 html.Li(f"Cashflow (Last Year): €{result['Operating Cashflow (Last Year)']:.2f}"),
                 html.Li(f"Tax Paid (Last Year): €{result['Tax Paid With Property (Last Year)']:.2f}"),
-                html.Li(f"📐 Wealth Delta: €{result['Net Wealth With Property'] - result['Net Wealth Without Property']:.2f}"),
+                html.Li(
+                    f"📐 Wealth Delta: €{result['Net Wealth With Property'] - result['Net Wealth Without Property']:.2f}"),
                 html.Li(f"ROI: {result['ROI']}"),
                 html.Li(f"IRR: {result['IRR']}%"),
             ])
-        ], body=True, style={"marginBottom": "30px"})
+        ],body=True, style={
+    "flex": "1 1 300px",  # Make cards expand to available space
+    "minWidth": "300px",
+    "margin": "5px"
+})
         cards.append(card)
 
-    return cards
+    # Wrap all cards in a flex container
+    return html.Div(
+        cards,
+        style={
+            "display": "flex",
+            "flexWrap": "wrap",
+            "gap": "10px",
+            "marginTop": "10px",
+        },
+    )
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)

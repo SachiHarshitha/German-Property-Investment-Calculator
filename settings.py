@@ -81,7 +81,7 @@ def get_value(key, default=None, config_path=CONFIG_PATH):
         with open(config_path, "r") as f:
             config = json.load(f)
             return config.get(key, default)
-    except (json.JSONDecodeError, IOError):
+    except (json.JSONDecodeError, IOError, TypeError):
         return default
 
 
