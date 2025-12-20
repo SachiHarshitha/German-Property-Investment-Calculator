@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>German Property Investment Calculator</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="/static/css/styles.css" />
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+  </head>
+  <body class="bg-body">
+    <header class="py-4 border-bottom sticky-top app-header">
+      <div class="container d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+        <div>
+          <h1 class="display-6 fw-semibold mb-1" data-i18n="appTitle">
+            🏠 Property Investment Calculator
+          </h1>
+          <p class="text-secondary mb-0" data-i18n="appSubtitle">
+            Plan scenarios, compare outcomes, and understand cashflow implications.
+          </p>
+        </div>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+          <div class="btn-group" role="group" aria-label="Theme toggle">
+            <button class="btn btn-outline-primary btn-sm" data-theme-toggle="light" data-i18n="lightMode">
+              Light
+            </button>
+            <button class="btn btn-outline-primary btn-sm" data-theme-toggle="dark" data-i18n="darkMode">
+              Dark
+            </button>
+          </div>
+          <select class="form-select form-select-sm" id="languageSelect" aria-label="Language">
+            <option value="en">English</option>
+            <option value="de">Deutsch</option>
+            <option value="zh">中文</option>
+          </select>
+        </div>
+      </div>
+    </header>
+
+    <main class="py-4">
+      <div class="container">
+        <section class="hero card shadow-sm border-0 mb-4">
+          <div class="card-body p-4 p-lg-5">
+            <div class="row align-items-center g-4">
+              <div class="col-lg-8">
+                <h2 class="h4 fw-semibold" data-i18n="introHeading">Scenario-based property analysis</h2>
+                <p class="text-secondary" data-i18n="introBody">
+                  This simulation calculates the financial performance of a property investment over a specified period. It takes into account purchase price, mortgage rate, rental income, and expenses.
+                </p>
+                <div class="alert alert-info mb-0" role="alert" data-i18n="disclaimer">
+                  Results are illustrative only and do not constitute personalized tax advice.
+                </div>
+              </div>
+              <div class="col-lg-4">
+                <aside class="ad-slot">
+                  <p class="text-uppercase small text-muted mb-2" data-i18n="adLabel">Advertisement</p>
+                  <div class="ad-placeholder" data-i18n="adPlaceholder">Ad banner placeholder</div>
+                </aside>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="row g-4 align-items-start">
+          <div class="col-12 col-xl-8">
+            <div class="card shadow-sm border-0">
+              <div class="card-body p-4">
+                <h3 class="h5 fw-semibold mb-3" data-i18n="inputHeading">Input details</h3>
+                <div class="row g-3">
+                  <div class="col-12">
+                    <h4 class="h6 text-uppercase text-secondary" data-i18n="personalInfo">👤 Personal Info</h4>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="salary_income" data-i18n="salaryIncome">Salary Income (€/year)</label>
+                    <input type="number" class="form-control" id="salary_income" value="76800" />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="monthly_expenses" data-i18n="monthlyExpenses">Monthly Expenses (€)</label>
+                    <input type="number" class="form-control" id="monthly_expenses" value="2000" />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="salary_increase_rate" data-i18n="salaryIncrease">Salary Increase Rate (%)</label>
+                    <input type="range" class="form-range" id="salary_increase_rate" min="0" max="10" step="0.1" value="2" />
+                    <span class="range-value" data-range-value-for="salary_increase_rate">2%</span>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="savings_interest_rate" data-i18n="savingsInterest">Savings Interest Rate (%)</label>
+                    <input type="range" class="form-range" id="savings_interest_rate" min="0" max="10" step="0.1" value="0" />
+                    <span class="range-value" data-range-value-for="savings_interest_rate">0%</span>
+                  </div>
+
+                  <div class="col-12 mt-2">
+                    <h4 class="h6 text-uppercase text-secondary" data-i18n="apartmentDetails">🏢 Apartment Details</h4>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="purchase_price" data-i18n="purchasePrice">Purchase Price (€)</label>
+                    <input type="number" class="form-control" id="purchase_price" value="300000" />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="apartment_size_sqm" data-i18n="apartmentSize">Apartment Size (sqm)</label>
+                    <input type="number" class="form-control" id="apartment_size_sqm" value="60" />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="land_value_per_sqm" data-i18n="landValue">Land Value per sqm (€)</label>
+                    <input type="number" class="form-control" id="land_value_per_sqm" value="1100" />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="hausgeld_monthly" data-i18n="hausgeld">Hausgeld Monthly (€)</label>
+                    <input type="number" class="form-control" id="hausgeld_monthly" value="300" />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="grundsteuer_yearly" data-i18n="grundsteuer">Grundsteuer Yearly (€)</label>
+                    <input type="number" class="form-control" id="grundsteuer_yearly" value="400" />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="maintenance_reserve_per_sqm_yearly" data-i18n="maintenanceReserve">Maintenance Reserve (€/sqm/year)</label>
+                    <input type="number" class="form-control" id="maintenance_reserve_per_sqm_yearly" value="0" />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="renovation_costs" data-i18n="renovationCosts">Renovation Costs (€)</label>
+                    <input type="number" class="form-control" id="renovation_costs" value="5000" />
+                  </div>
+
+                  <div class="col-12 mt-2">
+                    <h4 class="h6 text-uppercase text-secondary" data-i18n="rentalInfo">🔑 Rental Information</h4>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="rental_income_monthly" data-i18n="rentalIncome">Rental Income Monthly (€)</label>
+                    <input type="number" class="form-control" id="rental_income_monthly" value="1500" />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="vacancy_rate" data-i18n="vacancyRate">Vacancy Rate (%)</label>
+                    <input type="range" class="form-range" id="vacancy_rate" min="0" max="10" step="0.1" value="2" />
+                    <span class="range-value" data-range-value-for="vacancy_rate">2%</span>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="rental_increase_rate" data-i18n="rentalIncrease">Rental Increase Rate (%)</label>
+                    <input type="range" class="form-range" id="rental_increase_rate" min="0" max="10" step="0.1" value="2" />
+                    <span class="range-value" data-range-value-for="rental_increase_rate">2%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card shadow-sm border-0 mt-4">
+              <div class="card-body p-4">
+                <h3 class="h5 fw-semibold mb-3" data-i18n="financeHeading">Financing</h3>
+                <div class="row g-3">
+                  <div class="col-12">
+                    <h4 class="h6 text-uppercase text-secondary" data-i18n="purchaseCosts">💰 Purchase Costs</h4>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="property_transfer_tax_rate" data-i18n="transferTax">Property Transfer Tax Rate (%)</label>
+                    <input type="range" class="form-range" id="property_transfer_tax_rate" min="0" max="10" step="0.1" value="6" />
+                    <span class="range-value" data-range-value-for="property_transfer_tax_rate">6%</span>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="provision_rate" data-i18n="provisionRate">Provision Rate (%)</label>
+                    <input type="range" class="form-range" id="provision_rate" min="0" max="10" step="0.1" value="3.57" />
+                    <span class="range-value" data-range-value-for="provision_rate">3.57%</span>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="notary_fee_rate" data-i18n="notaryFee">Notary Fee Rate (%)</label>
+                    <input type="range" class="form-range" id="notary_fee_rate" min="0" max="5" step="0.1" value="1.5" />
+                    <span class="range-value" data-range-value-for="notary_fee_rate">1.5%</span>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="grundbuch_fee_rate" data-i18n="grundbuchFee">Grundbuch Fee Rate (%)</label>
+                    <input type="range" class="form-range" id="grundbuch_fee_rate" min="0" max="5" step="0.1" value="0.5" />
+                    <span class="range-value" data-range-value-for="grundbuch_fee_rate">0.5%</span>
+                  </div>
+
+                  <div class="col-12 mt-2">
+                    <h4 class="h6 text-uppercase text-secondary" data-i18n="mortgageValues">🏦 Mortgage Values</h4>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="mortgage_rate" data-i18n="mortgageRate">Mortgage Rate (%)</label>
+                    <input type="range" class="form-range" id="mortgage_rate" min="0" max="10" step="0.1" value="4" />
+                    <span class="range-value" data-range-value-for="mortgage_rate">4%</span>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="loan_percentage" data-i18n="loanPercentage">Loan Percentage (%)</label>
+                    <input type="range" class="form-range" id="loan_percentage" min="0" max="100" step="1" value="100" />
+                    <span class="range-value" data-range-value-for="loan_percentage">100%</span>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="principal_repayment_rate" data-i18n="principalRepayment">Principal Repayment Rate (%)</label>
+                    <input type="range" class="form-range" id="principal_repayment_rate" min="0" max="10" step="0.1" value="2" />
+                    <span class="range-value" data-range-value-for="principal_repayment_rate">2%</span>
+                  </div>
+
+                  <div class="col-12 mt-2">
+                    <h4 class="h6 text-uppercase text-secondary" data-i18n="otherSettings">⚙️ Other Settings</h4>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="years" data-i18n="simulationYears">Simulation Years</label>
+                    <input type="number" class="form-control" id="years" value="32" />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" for="depreciation_rate" data-i18n="depreciationRate">Property Depreciation Rate (%)</label>
+                    <input type="range" class="form-range" id="depreciation_rate" min="0" max="10" step="0.1" value="2" />
+                    <span class="range-value" data-range-value-for="depreciation_rate">2%</span>
+                  </div>
+                  <div class="col-12">
+                    <div class="form-check form-check-inline">
+                      <input class="form-check-input" type="radio" name="furnishing_option" id="furnishing_unfurnished" value="unfurnished" checked />
+                      <label class="form-check-label" for="furnishing_unfurnished" data-i18n="furnishingUnfurnished">Unfurnished</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                      <input class="form-check-input" type="radio" name="furnishing_option" id="furnishing_furnished" value="furnished" />
+                      <label class="form-check-label" for="furnishing_furnished" data-i18n="furnishingFurnished">Furnished (with depreciation)</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 col-xl-4">
+            <aside class="card shadow-sm border-0">
+              <div class="card-body p-4">
+                <h3 class="h5 fw-semibold" data-i18n="furnitureHeading">🪑 Furniture Depreciation</h3>
+                <div class="mb-3">
+                  <label class="form-label" for="depreciation_method" data-i18n="depreciationMethod">Depreciation Method</label>
+                  <select class="form-select" id="depreciation_method">
+                    <option value="berlin" data-i18n="methodBerlin">Berlin Method (2% linear)</option>
+                    <option value="hamburg" data-i18n="methodHamburg">Hamburg Method (15% declining + 12% interest)</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <h4 class="h6 text-uppercase text-secondary" data-i18n="lifespanHeading">Lifespan by Category</h4>
+                  <div class="row g-2">
+                    <div class="col-12">
+                      <label class="form-label" for="lifespan_kitchen" data-i18n="lifespanKitchen">Kitchen (years)</label>
+                      <input type="number" class="form-control" id="lifespan_kitchen" value="10" />
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label" for="lifespan_appliances" data-i18n="lifespanAppliances">Appliances (years)</label>
+                      <input type="number" class="form-control" id="lifespan_appliances" value="5" />
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label" for="lifespan_furniture" data-i18n="lifespanFurniture">Furniture (years)</label>
+                      <input type="number" class="form-control" id="lifespan_furniture" value="10" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <h4 class="h6 text-uppercase text-secondary" data-i18n="furnitureItemsHeading">Furniture Items</h4>
+                  <div class="table-responsive">
+                    <table class="table table-sm align-middle" id="furniture_table">
+                      <thead>
+                        <tr>
+                          <th data-i18n="furnitureItem">Item Name</th>
+                          <th data-i18n="furnitureCategory">Category</th>
+                          <th data-i18n="furnitureValue">Value (€)</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                  <button class="btn btn-outline-secondary btn-sm" id="add_furniture_row" type="button" data-i18n="addRow">Add Row</button>
+                </div>
+
+                <div class="d-grid gap-2">
+                  <button class="btn btn-primary" id="calculate_furniture" type="button" data-i18n="calculateFurniture">Calculate Furniture Depreciation</button>
+                </div>
+
+                <div class="mt-3">
+                  <div class="d-flex justify-content-between">
+                    <span class="text-secondary" data-i18n="totalCost">Total Cost</span>
+                    <span id="furniture_cost">Click Calculate</span>
+                  </div>
+                  <div class="d-flex justify-content-between">
+                    <span class="text-secondary" data-i18n="yearlyDepreciation">Yearly Depreciation</span>
+                    <span id="furniture_depreciation">Click Calculate</span>
+                  </div>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="card shadow-sm border-0 mt-4">
+          <div class="card-body p-4">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+              <div>
+                <h3 class="h5 fw-semibold" data-i18n="simulationHeading">📊 Simulation Output</h3>
+                <p class="text-secondary mb-0" data-i18n="simulationSubtitle">
+                  Run the simulation to see how your property investment compares over time.
+                </p>
+              </div>
+              <button class="btn btn-success btn-lg" id="run_simulation" type="button" data-i18n="runSimulation">Run Simulation</button>
+            </div>
+          </div>
+          <div class="card-body border-top p-4">
+            <div class="row g-4">
+              <div class="col-12 col-xl-8">
+                <div id="investment_chart" class="chart-frame"></div>
+              </div>
+              <div class="col-12 col-xl-4">
+                <h4 class="h6 text-uppercase text-secondary" data-i18n="summaryHeading">Summary Statistics</h4>
+                <ul class="list-group list-group-flush" id="result_stats"></ul>
+                <aside class="ad-slot mt-4">
+                  <p class="text-uppercase small text-muted mb-2" data-i18n="adLabel">Advertisement</p>
+                  <div class="ad-placeholder" data-i18n="adPlaceholder">Ad sidebar placeholder</div>
+                </aside>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="py-4 border-top">
+      <div class="container text-center small text-secondary" data-i18n="footerDisclaimer">
+        Results are illustrative only and should not be considered personalized financial or tax advice.
+      </div>
+    </footer>
+
+    <script type="module" src="/static/js/app.js"></script>
+  </body>
+</html>

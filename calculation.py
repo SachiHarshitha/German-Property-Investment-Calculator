@@ -582,35 +582,33 @@ def compare_properties(property_a_params: dict, property_b_params: dict) -> dict
     return comparison
 
 
-example_result = property_investment_calculator(
-    purchase_price=300000,
-    mortgage_rate=0.04,
-    loan_percentage=1,
-    rental_income_monthly=1200,
-    hausgeld_monthly=300,
-    grundsteuer_yearly=400,
-    maintenance_reserve_per_sqm_yearly=0,
-    apartment_size_sqm=60,
-    salary_income=6400 * 12,
-    savings_interest_rate=0,
-    vacancy_rate=0.02,
-    years=32,
-    renovation_costs=15000,
-    depreciation_rate=0.02,
-    land_value_per_sqm=1100,
-)
-
-
-"""
-for key, value in example_result.items():
-    if isinstance(value, list):
-        print(f"{key}: {value}")
-    else:
-        print(f"{key}: {value:.2f} €")
-"""
-
-print(
-    calculate_loan_term_for_monthly_payment(
-        loan_amount=300000, annual_interest_rate=0.04
+if __name__ == "__main__":
+    example_result = property_investment_calculator(
+        purchase_price=300000,
+        mortgage_rate=0.04,
+        loan_percentage=1,
+        rental_income_monthly=1200,
+        hausgeld_monthly=300,
+        grundsteuer_yearly=400,
+        maintenance_reserve_per_sqm_yearly=0,
+        apartment_size_sqm=60,
+        salary_income=6400 * 12,
+        savings_interest_rate=0,
+        vacancy_rate=0.02,
+        years=32,
+        renovation_costs=15000,
+        depreciation_rate=0.02,
+        land_value_per_sqm=1100,
     )
-)
+
+    for key, value in example_result.items():
+        if isinstance(value, list):
+            print(f"{key}: {value}")
+        else:
+            print(f"{key}: {value:.2f} €")
+
+    print(
+        calculate_loan_term_for_monthly_payment(
+            loan_amount=300000, annual_interest_rate=0.04
+        )
+    )
