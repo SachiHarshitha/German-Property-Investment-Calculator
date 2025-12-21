@@ -1,0 +1,25 @@
+{
+  "name": "german-property-investment-calculator",
+  "version": "1.0.0",
+  "description": "Static, browser-only dashboard that simulates property investment gains (including simplified German tax estimates) without any backend server.",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SachiHarshitha/German-Property-Investment-Calculator.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/SachiHarshitha/German-Property-Investment-Calculator/issues"
+  },
+  "homepage": "https://github.com/SachiHarshitha/German-Property-Investment-Calculator#readme",
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
