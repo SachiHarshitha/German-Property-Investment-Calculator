@@ -471,6 +471,25 @@ async function calculateFurniture() {
   }).format(data.depreciation);
 }
 
+let lastFigure = null;
+
+function applyPlotlyTheme(figure) {
+  const theme = document.documentElement.getAttribute("data-theme") || "light";
+  const layout = { ...(figure.layout || {}) };
+  if (theme === "dark") {
+    layout.template = "plotly_dark";
+    layout.paper_bgcolor = "rgba(0,0,0,0)";
+    layout.plot_bgcolor = "rgba(0,0,0,0)";
+    layout.font = { ...(layout.font || {}), color: "#f9fafb" };
+  } else {
+    layout.template = "plotly_white";
+    layout.paper_bgcolor = "rgba(0,0,0,0)";
+    layout.plot_bgcolor = "rgba(0,0,0,0)";
+    layout.font = { ...(layout.font || {}), color: "#101828" };
+  }
+  return { ...figure, layout };
+}
+
 async function runSimulation() {
   const payload = {
     salary_income: Number(getFormValue("salary_income")),
@@ -511,7 +530,9 @@ async function runSimulation() {
   });
   const data = await response.json();
 
-  Plotly.react("investment_chart", data.figure.data, data.figure.layout, {
+  lastFigure = applyPlotlyTheme(data.figure);
+
+  Plotly.react("investment_chart", lastFigure.data, lastFigure.layout, {
     responsive: true,
   });
 
@@ -529,6 +550,13 @@ function init() {
   document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
     button.addEventListener("click", () => {
       setTheme(button.getAttribute("data-theme-toggle"));
+      if (lastFigure) {
+        const themedFigure = applyPlotlyTheme(lastFigure);
+        Plotly.react("investment_chart", themedFigure.data, themedFigure.layout, {
+          responsive: true,
+        });
+        lastFigure = themedFigure;
+      }
     });
   });
 
