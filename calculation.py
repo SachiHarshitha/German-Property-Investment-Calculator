@@ -42,6 +42,7 @@ def property_investment_calculator(
     grundsteuer_yearly,
     maintenance_reserve_per_sqm_yearly,
     apartment_size_sqm,
+    principal_repayment_rate=0.02,
     salary_income=60000,
     monthly_expenses=2000,
     salary_increase_rate=0.02,
@@ -73,10 +74,15 @@ def property_investment_calculator(
     loan_amount = purchase_price * loan_percentage
 
     # Calculate the monthly loan payment using the annuity formula
-    loan_period = calculate_loan_term_for_monthly_payment(
-        loan_amount=loan_amount, annual_interest_rate=mortgage_rate
-    )
-    monthly_loan_payment = loan_period[0]  # Get the monthly payment from the tuple
+    if principal_repayment_rate > 0:
+        monthly_loan_payment = loan_amount * (
+            mortgage_rate + principal_repayment_rate
+        ) / 12
+    else:
+        loan_period = calculate_loan_term_for_monthly_payment(
+            loan_amount=loan_amount, annual_interest_rate=mortgage_rate
+        )
+        monthly_loan_payment = loan_period[0]  # Get the monthly payment from the tuple
     total_furniture_costs = 0.0
     if furniture_items:
         total_furniture_costs = sum([v[0] for v in furniture_items.values()])

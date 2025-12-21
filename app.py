@@ -15,16 +15,17 @@ def build_furniture_items(
 ) -> dict[str, tuple[float, float]]:
     items: dict[str, tuple[float, float]] = {}
     lifespan_map = {
-        "kitchen": lifespan_kitchen,
-        "appliances": lifespan_appliances,
-        "furniture": lifespan_furniture,
+        "kitchen": max(1.0, lifespan_kitchen),
+        "appliances": max(1.0, lifespan_appliances),
+        "furniture": max(1.0, lifespan_furniture),
     }
     for item in furniture_table or []:
         name = str(item.get("name", "")).strip()
         value = item.get("value")
         category = item.get("category", "furniture")
         if name and value not in (None, ""):
-            items[name] = (float(value), float(lifespan_map.get(category, 0)))
+            lifespan = max(1.0, float(lifespan_map.get(category, 1.0)))
+            items[name] = (float(value), lifespan)
     return items
 
 
@@ -89,6 +90,7 @@ def simulate() -> tuple[str, int] | str:
         salary_income=get_float(data, "salary_income", 6400 * 12),
         monthly_expenses=get_float(data, "monthly_expenses", 2000),
         salary_increase_rate=get_float(data, "salary_increase_rate", 2) / 100,
+        principal_repayment_rate=get_float(data, "principal_repayment_rate", 2) / 100,
         years=int(get_float(data, "years", 32)),
         vacancy_rate=get_float(data, "vacancy_rate", 2) / 100,
         property_transfer_tax_rate=get_float(data, "property_transfer_tax_rate", 6)
