@@ -42,6 +42,7 @@ def property_investment_calculator(
     grundsteuer_yearly,
     maintenance_reserve_per_sqm_yearly,
     apartment_size_sqm,
+    principal_repayment_rate=0.02,
     salary_income=60000,
     monthly_expenses=2000,
     salary_increase_rate=0.02,
@@ -73,10 +74,15 @@ def property_investment_calculator(
     loan_amount = purchase_price * loan_percentage
 
     # Calculate the monthly loan payment using the annuity formula
-    loan_period = calculate_loan_term_for_monthly_payment(
-        loan_amount=loan_amount, annual_interest_rate=mortgage_rate
-    )
-    monthly_loan_payment = loan_period[0]  # Get the monthly payment from the tuple
+    if principal_repayment_rate > 0:
+        monthly_loan_payment = loan_amount * (
+            mortgage_rate + principal_repayment_rate
+        ) / 12
+    else:
+        loan_period = calculate_loan_term_for_monthly_payment(
+            loan_amount=loan_amount, annual_interest_rate=mortgage_rate
+        )
+        monthly_loan_payment = loan_period[0]  # Get the monthly payment from the tuple
     total_furniture_costs = 0.0
     if furniture_items:
         total_furniture_costs = sum([v[0] for v in furniture_items.values()])
@@ -582,35 +588,33 @@ def compare_properties(property_a_params: dict, property_b_params: dict) -> dict
     return comparison
 
 
-example_result = property_investment_calculator(
-    purchase_price=300000,
-    mortgage_rate=0.04,
-    loan_percentage=1,
-    rental_income_monthly=1200,
-    hausgeld_monthly=300,
-    grundsteuer_yearly=400,
-    maintenance_reserve_per_sqm_yearly=0,
-    apartment_size_sqm=60,
-    salary_income=6400 * 12,
-    savings_interest_rate=0,
-    vacancy_rate=0.02,
-    years=32,
-    renovation_costs=15000,
-    depreciation_rate=0.02,
-    land_value_per_sqm=1100,
-)
-
-
-"""
-for key, value in example_result.items():
-    if isinstance(value, list):
-        print(f"{key}: {value}")
-    else:
-        print(f"{key}: {value:.2f} €")
-"""
-
-print(
-    calculate_loan_term_for_monthly_payment(
-        loan_amount=300000, annual_interest_rate=0.04
+if __name__ == "__main__":
+    example_result = property_investment_calculator(
+        purchase_price=300000,
+        mortgage_rate=0.04,
+        loan_percentage=1,
+        rental_income_monthly=1200,
+        hausgeld_monthly=300,
+        grundsteuer_yearly=400,
+        maintenance_reserve_per_sqm_yearly=0,
+        apartment_size_sqm=60,
+        salary_income=6400 * 12,
+        savings_interest_rate=0,
+        vacancy_rate=0.02,
+        years=32,
+        renovation_costs=15000,
+        depreciation_rate=0.02,
+        land_value_per_sqm=1100,
     )
-)
+
+    for key, value in example_result.items():
+        if isinstance(value, list):
+            print(f"{key}: {value}")
+        else:
+            print(f"{key}: {value:.2f} €")
+
+    print(
+        calculate_loan_term_for_monthly_payment(
+            loan_amount=300000, annual_interest_rate=0.04
+        )
+    )

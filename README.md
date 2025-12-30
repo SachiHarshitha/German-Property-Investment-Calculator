@@ -1,5 +1,16 @@
 # German-Property-Investment-Calculator
-Simple Dash app with a web dashboard to simulate the property investment gains based on real tax calculations.
+Static, browser-only dashboard that simulates property investment gains (including simplified German tax estimates) without any backend server.
+
+## Running the app
+- Open `templates/index.html` directly in your browser, or
+- Serve the repository with a static server (e.g., `python -m http.server`) and visit `http://localhost:8000/templates/`.
+
+### Rebuilding the frontend (TypeScript)
+```
+npm install
+npm run build
+```
+The compiled output is written to `static/js/app.js`, which `templates/index.html` already loads.
 
 ## User Input
 User Input in this app is seperated under 6 sections.

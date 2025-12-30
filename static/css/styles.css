@@ -1,0 +1,78 @@
+:root {
+  color-scheme: light;
+  --app-bg: #f7f9fc;
+  --app-surface: #ffffff;
+  --app-text: #101828;
+  --app-muted: #667085;
+  --app-border: #e4e7ec;
+  --app-accent: #4f46e5;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --app-bg: #0b1220;
+  --app-surface: #111827;
+  --app-text: #f9fafb;
+  --app-muted: #cbd5f5;
+  --app-border: #1f2937;
+  --app-accent: #a5b4fc;
+}
+
+body {
+  background: var(--app-bg);
+  color: var(--app-text);
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+.app-header {
+  background: var(--app-surface);
+  border-bottom: 1px solid var(--app-border);
+}
+
+.card {
+  background: var(--app-surface);
+  border-color: var(--app-border);
+}
+
+.text-secondary {
+  color: var(--app-muted) !important;
+}
+
+.range-value {
+  display: inline-block;
+  font-size: 0.875rem;
+  color: var(--app-muted);
+}
+
+.ad-slot {
+  background: transparent;
+}
+
+.ad-placeholder {
+  border: 1px dashed var(--app-border);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  color: var(--app-muted);
+  background: rgba(79, 70, 229, 0.05);
+}
+
+.chart-frame {
+  min-height: 420px;
+}
+
+.list-group-item {
+  background: transparent;
+  color: var(--app-text);
+  border-color: var(--app-border);
+}
+
+footer {
+  background: var(--app-surface);
+}
+
+@media (max-width: 991px) {
+  .app-header {
+    position: static;
+  }
+}

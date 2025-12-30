@@ -175,3 +175,5 @@ cython_debug/
 
 # Settings file
 settings.json
+
+node_modules/
